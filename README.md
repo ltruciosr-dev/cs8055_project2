@@ -81,13 +81,16 @@ The performance of both Hill Climbing and Simulated Annealing was evaluated base
 | Simulated Annealing* | **2.17** | 812 ms |
 | Simulated Annealing** | **2.25** | 1690 ms |
 
-- Hill Climbing Plot \
+- Hill Climbing Plot
+
 <img src="images/hill_climbing.png" alt="HC" width="900">
 
-- (*) Simulated Annealing Plot (`cooling_rate`: 0.90) \
+- (*) Simulated Annealing Plot (`cooling_rate`: 0.90)
+
 <img src="images/simulated_annealing_90.png" alt="SA_90" width="900">
 
-- (**) Simulated Annealing Plot (`cooling_rate`: 0.95) \
+- (**) Simulated Annealing Plot (`cooling_rate`: 0.95)
+
 <img src="images/simulated_annealing_95.png" alt="SA_95" width="900">
 
 ### Analysis

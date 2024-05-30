@@ -80,6 +80,9 @@ The performance of both Hill Climbing and Simulated Annealing was evaluated base
 | Hill Climbing	| 2.13 | **77 ms** |
 | Simulated Annealing | **2.17** | 812 ms |
 
+<!-- Embed HTML file content directly -->
+<iframe src="images/hill_climbing.html" style="width: 10%; height: 200px; border: none;"></iframe>
+
 ### Analysis
 
 - Final Fitness: Simulated Annealing outperformed Hill Climbing by achieving a higher final fitness value of 2.17 compared to Hill Climbing's fitness value of 2.13. This indicates that Simulated Annealing is more effective in finding a better solution in terms of maximizing the fitness of packages within the containers.

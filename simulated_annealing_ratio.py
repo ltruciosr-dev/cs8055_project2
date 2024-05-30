@@ -1,6 +1,8 @@
 import time
 import random
 import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
 from typing import List
 from dataclasses import dataclass
 
@@ -42,6 +44,43 @@ def total_fitness(containers: List[Container]):
 
 def weight(item: int):
     return paquetes[item].peso
+
+def list_to_array(list: List[List[int]]):
+    max_length = max(len(sublist) for sublist in list)
+    padded_list = [sublist + [sublist[-1]] * (max_length - len(sublist)) for sublist in list]
+
+    return np.array(padded_list)
+
+def plot_fitness(list_iterations: List[List[int]], list_values: List[List[int]], list_pesos: List[List[int]]):
+    fig = go.Figure()
+
+    # Plot the fitness by container
+    palette = px.colors.qualitative.Pastel
+    idx = 0
+    for sublist, subvalue, subpeso in zip(list_iterations, list_values, list_pesos):
+        subfitness = np.array(subvalue) / np.array(subpeso)
+        color = palette[idx % len(palette)]
+        fig.add_trace(go.Scatter(x=sublist, y=subfitness, mode='lines+markers', name=f'Fitness Container {idx}', line=dict(color=color)))
+        idx+=1
+
+    # Plot the average fitness
+    arr_iterations = np.arange(max(len(sublist) for sublist in list_iterations))
+    arr_values = list_to_array(list_values).sum(axis=0)
+    arr_pesos = list_to_array(list_pesos).sum(axis=0)
+    arr_fitness = arr_values / arr_pesos
+
+    fig.add_trace(go.Scatter(x=arr_iterations, y=arr_fitness, mode='lines+markers', 
+                             name='Total Fitness', 
+                             line=dict(width=5, color='black'),  # Customize line width and color
+                             marker=dict(size=8)))
+    
+    # Add title and labels
+    fig.update_layout(title='Simulated Annealing',
+                    xaxis_title='Iterations',
+                    yaxis_title='Fitness Values')
+    
+    # Show plot
+    fig.show()
 
 def get_random_neighbor(items: List[int], available_items: List[int], capacidad: int):
     residual_items = list(set(available_items) - set(items))
@@ -118,6 +157,9 @@ if __name__ == '__main__':
     residual_items = [paquete.indice for paquete in paquetes]
 
     # Parameters
+    list_iterations = []
+    list_values = []
+    list_pesos = []
     for idx, container in enumerate(containers):
         print(f"\nContainer {idx}")
         available_items = residual_items.copy()
@@ -131,8 +173,12 @@ if __name__ == '__main__':
         iteration = 0
         T_max = 1000
         T_min = 0.1
-        cooling_rate = 0.9
+        cooling_rate = 0.90
         E = fitness(container.items)
+
+        iterations = [iteration]
+        values = [fitness_valor(container.items)]
+        pesos = [fitness_peso(container.items)]
         while T_max > T_min:
             neighbor = get_random_neighbor(
                 items = container.items,
@@ -149,6 +195,18 @@ if __name__ == '__main__':
                 E = E_new
             T_max *= cooling_rate
             iteration += 1
+            valor = fitness_valor(container.items)
+            peso = fitness_peso(container.items)
+            
+            # Store in logs
+            iterations.append(iteration)
+            values.append(valor)
+            pesos.append(peso)
+
+        list_iterations.append(iterations)
+        list_values.append(values)
+        list_pesos.append(pesos)
+
         residual_items = list(set(residual_items) - set(container.items))
         container.valor = fitness_valor(container.items)
         container.peso = fitness_peso(container.items)
@@ -164,4 +222,7 @@ if __name__ == '__main__':
     end_time = time.time()
     simulated_annealing_time = end_time - start_time
     print(f"\nSimulated Annealing elapsed time: {simulated_annealing_time} seconds")
+
+    # Plot fitness evolution
+    plot_fitness(list_iterations, list_values, list_pesos)
     

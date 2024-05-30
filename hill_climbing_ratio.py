@@ -1,6 +1,8 @@
 import random
 import time
 import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
 from typing import List
 from dataclasses import dataclass
 
@@ -40,6 +42,74 @@ def total_fitness_peso(containers: List[Container]):
 def total_fitness(containers: List[Container]):
     return total_fitness_valor(containers) / total_fitness_peso(containers)
 
+def list_to_array(list: List[List[int]]):
+    max_length = max(len(sublist) for sublist in list)
+    padded_list = [sublist + [sublist[-1]] * (max_length - len(sublist)) for sublist in list]
+
+    return np.array(padded_list)
+
+def plot_fitness_absolute(list_iterations: List[List[int]], list_values: List[List[int]], list_pesos: List[List[int]]):
+    arr_iterations = np.arange(max(len(sublist) for sublist in list_iterations))
+    arr_values = list_to_array(list_values).sum(axis=0)
+    arr_pesos = list_to_array(list_pesos).sum(axis=0)
+    arr_fitness = arr_values / arr_pesos
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=arr_iterations, y=arr_fitness, mode='lines+markers', name=f'Total Fitness'))
+    fig.update_layout(title='Hill Climbing',
+                    xaxis_title='Iterations',
+                    yaxis_title='Total Fitness Values')
+
+    fig.show()
+
+def plot_fitness_parallel(list_iterations: List[List[int]], list_values: List[List[int]], list_pesos: List[List[int]]):
+    fig = go.Figure()
+
+    idx = 0
+    for sublist, subvalue, subpeso in zip(list_iterations, list_values, list_pesos):
+        subfitness = np.array(subvalue) / np.array(subpeso)
+        fig.add_trace(go.Scatter(x=sublist, y=subfitness, mode='lines+markers', name=f'Fitness Container_{idx}'))
+        idx+=1
+
+    # Add title and labels
+    fig.update_layout(title='Hill Climbing',
+                    xaxis_title='Iterations',
+                    yaxis_title='Fitness Values')
+
+    # Show plot
+    fig.show()
+
+def plot_fitness(list_iterations: List[List[int]], list_values: List[List[int]], list_pesos: List[List[int]]):
+    fig = go.Figure()
+
+    # Plot the fitness by container
+    palette = px.colors.qualitative.Pastel
+    idx = 0
+    for sublist, subvalue, subpeso in zip(list_iterations, list_values, list_pesos):
+        subfitness = np.array(subvalue) / np.array(subpeso)
+        color = palette[idx % len(palette)]
+        fig.add_trace(go.Scatter(x=sublist, y=subfitness, mode='lines+markers', name=f'Fitness Container {idx}', line=dict(color=color)))
+        idx+=1
+
+    # Plot the average fitness
+    arr_iterations = np.arange(max(len(sublist) for sublist in list_iterations))
+    arr_values = list_to_array(list_values).sum(axis=0)
+    arr_pesos = list_to_array(list_pesos).sum(axis=0)
+    arr_fitness = arr_values / arr_pesos
+
+    fig.add_trace(go.Scatter(x=arr_iterations, y=arr_fitness, mode='lines+markers', 
+                             name='Total Fitness', 
+                             line=dict(width=5, color='black'),  # Customize line width and color
+                             marker=dict(size=12)))
+    
+    # Add title and labels
+    fig.update_layout(title='Hill Climbing',
+                    xaxis_title='Iterations',
+                    yaxis_title='Fitness Values')
+    
+    # Show plot
+    fig.show()
+
 def get_neighbors(items: List[int], available_items: List[int], capacidad: int):
     """
     Generate a list of neighboring item configurations within the given capacity.
@@ -75,8 +145,10 @@ if __name__ == '__main__':
     random.seed(0)
     np.random.seed(0)
 
-    N_CONTAINERS = 100 # 3
-    N_PAQUETES = 1000 # 20
+    # N_CONTAINERS = 3
+    # N_PAQUETES = 20
+    N_CONTAINERS = 100
+    N_PAQUETES = 1000
 
     # Define container capacities
     containers_capacidad = np.random.randint(5, 10, N_CONTAINERS)
@@ -117,6 +189,9 @@ if __name__ == '__main__':
 
     residual_items = [paquete.indice for paquete in paquetes]
 
+    list_iterations = []
+    list_values = []
+    list_pesos = []
     for idx, container in enumerate(containers):
         print(f"\nContainer {idx}")
         available_items = residual_items.copy()
@@ -127,6 +202,9 @@ if __name__ == '__main__':
         
         # Start Iteration
         iteration = 0
+        iterations = [iteration]
+        values = [fitness_valor(container.items)]
+        pesos = [fitness_peso(container.items)]
         while True:
             neighbors = get_neighbors(
                 items = container.items, 
@@ -146,6 +224,18 @@ if __name__ == '__main__':
             else:
                 break
             iteration += 1
+            valor = fitness_valor(container.items)
+            peso = fitness_peso(container.items)
+            
+            # Store in logs
+            iterations.append(iteration)
+            values.append(valor)
+            pesos.append(peso)
+
+        list_iterations.append(iterations)
+        list_values.append(values)
+        list_pesos.append(pesos)
+
         residual_items = list(set(residual_items) - set(container.items))
         container.valor = fitness_valor(container.items)
         container.peso = fitness_peso(container.items)
@@ -161,4 +251,6 @@ if __name__ == '__main__':
     end_time = time.time()
     hill_climbing_time = end_time - start_time
     print(f"\nHill Climbing elapsed time: {hill_climbing_time} seconds")
-    
+
+    # Plot fitness evolution
+    plot_fitness(list_iterations, list_values, list_pesos)

@@ -78,10 +78,17 @@ The performance of both Hill Climbing and Simulated Annealing was evaluated base
 | Algorithm | Final Fitness | Avg Inference Time |
 | --------- | ------------- | ------------------ |
 | Hill Climbing	| 2.13 | **77 ms** |
-| Simulated Annealing | **2.17** | 812 ms |
+| Simulated Annealing* | **2.17** | 812 ms |
+| Simulated Annealing** | **2.25** | 1690 ms |
 
-<!-- Embed HTML file content directly -->
-<iframe src="images/hill_climbing.html" style="width: 10%; height: 200px; border: none;"></iframe>
+- Hill Climbing Plot \
+<img src="images/hill_climbing.png" alt="HC" width="900">
+
+- (*) Simulated Annealing Plot (`cooling_rate`: 0.90) \
+<img src="images/simulated_annealing_90.png" alt="SA_90" width="900">
+
+- (**) Simulated Annealing Plot (`cooling_rate`: 0.95) \
+<img src="images/simulated_annealing_95.png" alt="SA_95" width="900">
 
 ### Analysis
 
